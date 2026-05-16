@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Auto VSIP Backtest — With Step-Up SIP</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f3ee;
+      --surface: #ffffff;
+      --border: #e0dcd4;
+      --accent: #1a3a2a;
+      --accent2: #2e6b4a;
+      --header-text: #f0ead8;
+      --muted: #6b6b6b;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: #1c1c1c;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    header {
+      background: var(--accent);
+      color: var(--header-text);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.28);
+      z-index: 10;
+    }
+    .logo-area h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.25rem;
+      color: var(--header-text);
+    }
+    .logo-area p {
+      font-size: 0.67rem;
+      color: #a8c4b0;
+      margin-top: 3px;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+    .badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px; padding: 6px 14px;
+      font-size: 0.69rem; color: #a8c4b0;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .toolbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 11px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .sheet-meta { display: flex; align-items: center; gap: 10px; }
+    .sheet-icon {
+      width: 30px; height: 30px; background: #1d6b3a;
+      border-radius: 5px; display: flex; align-items: center; justify-content: center;
+    }
+    .sheet-icon svg { width: 17px; height: 17px; fill: white; }
+    .sheet-name { font-size: 0.88rem; font-weight: 600; }
+    .sheet-sub { font-size: 0.69rem; color: var(--muted); }
+
+    .actions { display: flex; gap: 10px; align-items: center; }
+    .view-only-tag {
+      font-size: 0.69rem; color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 12px;
+    }
+    .btn-print {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--accent2); color: white;
+      border: none; border-radius: 7px; padding: 9px 20px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; letter-spacing: 0.02em;
+      transition: background 0.18s, transform 0.1s;
+    }
+    .btn-print:hover { background: #1f5235; }
+    .btn-print:active { transform: scale(0.97); }
+    .btn-print svg { width: 15px; height: 15px; }
+
+    .iframe-wrapper {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Transparent overlay on top of iframe — blocks right-click & text selection in iframe */
+    .iframe-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: transparent;
+    }
+    iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    footer {
+      text-align: center; padding: 12px;
+      font-size: 0.67rem; color: var(--muted);
+      border-top: 1px solid var(--border);
+      background: var(--surface); letter-spacing: 0.03em;
+      flex-shrink: 0;
+    }
+
+    @media print {
+      header, .toolbar, footer, .iframe-overlay { display: none !important; }
+      body { -webkit-user-select: text; user-select: text; height: auto; }
+      .iframe-wrapper { position: static; overflow: visible; height: 100vh; }
+      iframe { position: static; height: 100vh; }
+      @page { margin: 12mm; size: A4 landscape; }
+    }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+
+<header>
+  <div class="logo-area">
+    <h1>Auto VSIP Backtest — With Step-Up SIP</h1>
+    <p>Read-Only Financial Report Viewer</p>
+  </div>
+  <div class="badge">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    View Only · No Download
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="sheet-meta">
+    <div class="sheet-icon">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+    </div>
+    <div>
+      <div class="sheet-name">Auto VSIP Backtest -3 · With Step-Up SIP</div>
+      <div class="sheet-sub">Live from Google Sheets · View only</div>
+    </div>
+  </div>
+  <div class="actions">
+    <span class="view-only-tag">🔒 View Only</span>
+    <button class="btn-print" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <polyline points="6 9 6 2 18 2 18 9"/>
+        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8"/>
+      </svg>
+      Print / Save as PDF
+    </button>
+  </div>
+</div>
+
+<div class="iframe-wrapper">
+  <div class="iframe-overlay" oncontextmenu="return false;" ondragstart="return false;"></div>
+  <iframe
+    src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSvGLZJ65wMrjK8lrczDRtp1FPMAbfQzZzwg1mrv5DqKxMch2tGSPT50Hw8YHtKa2tA5UumYPJzPR1b/pubhtml?widget=false&headers=false&chrome=false"
+    title="Auto VSIP Backtest Sheet"
+    allowfullscreen
+  ></iframe>
+</div>
+
+<footer>
+  This document is view-only &nbsp;·&nbsp; Copying, downloading or redistribution is not permitted &nbsp;·&nbsp; Print as PDF only
+</footer>
+
+<script>
+  // Block Ctrl+C / Ctrl+S / Ctrl+A / Ctrl+U (keep Ctrl+P for print)
+  document.addEventListener('keydown', e => {
+    const key = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && ['c','s','a','u','x'].includes(key)) {
+      e.preventDefault();
+      return false;
+    }
+  });
+  document.addEventListener('dragstart', e => e.preventDefault());
+</script>
+</body>
+</html>
